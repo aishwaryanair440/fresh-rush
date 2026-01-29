@@ -18,29 +18,26 @@ import {
   Package,
   Zap,
   ArrowRight,
-  Plus
+  Plus,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_PRODUCE, MOCK_BUYERS } from './data/mockData';
 import { useCountdown } from './hooks/useCountdown';
-import AddProduceModal from './components/AddProduceModal';
 import './App.css';
 
-// --- Sub-components ---
+// Views
+import DashboardView from './components/views/DashboardView';
+import DeliveriesView from './components/views/DeliveriesView';
+import AnalyticsView from './components/views/AnalyticsView';
+import FarmMapView from './components/views/FarmMapView';
+import ProfileView from './components/views/ProfileView';
+import SettingsView from './components/views/SettingsView';
 
-const StatCard = ({ label, value, icon: Icon, color }) => (
-  <div className="glass-panel stat-card">
-    <div className="stat-label">{label}</div>
-    <div className="stat-value" style={{ color }}>{value}</div>
-    <div style={{ position: 'absolute', right: '20px', bottom: '20px', opacity: 0.1 }}>
-      <Icon size={48} />
-    </div>
-  </div>
-);
+// --- Sub-components used across views ---
 
 const ProductCard = ({ product, onSelect, onCancel, isActive }) => {
   const { hours, minutes, seconds, urgency } = useCountdown(product.expiryTime);
-
   const isCritical = urgency === 'critical' || urgency === 'expired';
   const isCancelled = product.status === 'Cancelled';
 
@@ -56,7 +53,6 @@ const ProductCard = ({ product, onSelect, onCancel, isActive }) => {
       <div className="item-icon-box">
         <Leaf size={28} color={isCritical ? 'var(--status-critical)' : 'var(--primary)'} />
       </div>
-
       <div className="product-info">
         <h3 style={{ color: urgency === 'expired' ? 'var(--text-dim)' : 'inherit' }}>{product.name}</h3>
         <div className="product-meta">
@@ -67,14 +63,12 @@ const ProductCard = ({ product, onSelect, onCancel, isActive }) => {
           </span>
         </div>
       </div>
-
       <div className="countdown-box">
         <div className="countdown-timer" style={{ color: isCritical ? 'var(--status-critical)' : 'inherit' }}>
           {hours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
         </div>
         <div className={`urgency-badge ${urgency}`}>{urgency}</div>
       </div>
-
       <div className="product-actions" onClick={(e) => e.stopPropagation()}>
         {isCancelled ? (
           <button className="buyer-action-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
@@ -86,7 +80,7 @@ const ProductCard = ({ product, onSelect, onCancel, isActive }) => {
             className="buyer-action-btn"
             style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--status-critical)', border: 'none' }}
           >
-            Simulate Cancel
+            Cancel Order
           </button>
         )}
       </div>
@@ -122,6 +116,7 @@ const BuyerCard = ({ buyer }) => (
 // --- Main App Component ---
 
 function App() {
+  const [currentView, setCurrentView] = useState('dashboard');
   const [products, setProducts] = useState(MOCK_PRODUCE);
   const [selectedProduct, setSelectedProduct] = useState(MOCK_PRODUCE[0] || null);
   const [notifications, setNotifications] = useState([]);
@@ -130,11 +125,8 @@ function App() {
   // Priority Sorting Logic
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
-      // Prioritize Cancelled over Active
       if (a.status === 'Cancelled' && b.status !== 'Cancelled') return -1;
       if (a.status !== 'Cancelled' && b.status === 'Cancelled') return 1;
-
-      // Then sort by expiry time
       return new Date(a.expiryTime) - new Date(b.expiryTime);
     });
   }, [products]);
@@ -150,23 +142,6 @@ function App() {
     addNotification(`Produce registered: ${newProduct.name} is now live in the system.`, 'fresh');
   };
 
-  // Notifications Simulation
-  useEffect(() => {
-    const checkUrgency = () => {
-      products.forEach(p => {
-        if (p.status === 'Cancelled') {
-          const diff = (new Date(p.expiryTime) - new Date()) / (1000 * 60 * 60);
-          if (diff > 0 && diff < 6) {
-            addNotification(`CRITICAL: ${p.name} expires in ${Math.round(diff * 60)} mins!`, 'critical');
-          }
-        }
-      });
-    };
-
-    const interval = setInterval(checkUrgency, 30000); // Check every 30s
-    return () => clearInterval(interval);
-  }, [products]);
-
   const addNotification = (message, type) => {
     const id = Date.now();
     setNotifications(prev => [{ id, message, type }, ...prev].slice(0, 3));
@@ -177,113 +152,79 @@ function App() {
 
   const stats = {
     atRisk: products.filter(p => p.status === 'Cancelled').length,
-    totalVolume: "4,800 kg",
+    totalVolume: `${products.reduce((acc, p) => acc + parseInt(p.quantity.replace(/,/g, '')), 0)} kg`,
     activeBuyers: MOCK_BUYERS.length
+  };
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return (
+          <DashboardView
+            stats={stats}
+            sortedProducts={sortedProducts}
+            setSelectedProduct={setSelectedProduct}
+            selectedProduct={selectedProduct}
+            handleCancel={handleCancel}
+            setIsModalOpen={setIsModalOpen}
+            notifications={notifications}
+            isModalOpen={isModalOpen}
+            handleAddProduce={handleAddProduce}
+            ProductCard={ProductCard}
+            MOCK_BUYERS={MOCK_BUYERS}
+            BuyerCard={BuyerCard}
+            onProfileClick={() => setCurrentView('profile')}
+          />
+        );
+      case 'deliveries': return <DeliveriesView />;
+      case 'analytics': return <AnalyticsView />;
+      case 'map': return <FarmMapView />;
+      case 'profile': return <ProfileView />;
+      case 'settings': return <SettingsView />;
+      default: return <DashboardView />;
+    }
+  };
+
+  const handleLogout = () => {
+    addNotification("Logging out of Secure Session...", "critical");
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
 
   return (
     <div className="app-container dashboard">
       {/* Sidebar */}
       <aside className="sidebar">
-        <div className="logo-container">
+        <div className="logo-container" onClick={() => setCurrentView('dashboard')} style={{ cursor: 'pointer' }}>
           <Zap color="var(--primary)" fill="var(--primary)" size={32} />
           <span className="logo-text">FreshRush</span>
         </div>
 
         <nav className="nav-links">
-          <div className="nav-item active"><LayoutDashboard size={20} /> Dashboard</div>
-          <div className="nav-item"><Truck size={20} /> My Deliveries</div>
-          <div className="nav-item"><BarChart3 size={20} /> Analytics</div>
-          <div className="nav-item"><MapPin size={20} /> Farm Map</div>
-          <div style={{ marginTop: 'auto' }} className="nav-item"><Settings size={20} /> Settings</div>
-          <div className="nav-item"><LogOut size={20} /> Logout</div>
+          <div className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentView('dashboard')}>
+            <LayoutDashboard size={20} /> Dashboard
+          </div>
+          <div className={`nav-item ${currentView === 'deliveries' ? 'active' : ''}`} onClick={() => setCurrentView('deliveries')}>
+            <Truck size={20} /> My Deliveries
+          </div>
+          <div className={`nav-item ${currentView === 'analytics' ? 'active' : ''}`} onClick={() => setCurrentView('analytics')}>
+            <BarChart3 size={20} /> Analytics
+          </div>
+          <div className={`nav-item ${currentView === 'map' ? 'active' : ''}`} onClick={() => setCurrentView('map')}>
+            <MapPin size={20} /> Farm Map
+          </div>
+          <div style={{ marginTop: 'auto' }} className={`nav-item ${currentView === 'settings' ? 'active' : ''}`} onClick={() => setCurrentView('settings')}>
+            <Settings size={20} /> Settings
+          </div>
+          <div className="nav-item" onClick={handleLogout} style={{ color: 'var(--status-critical)' }}>
+            <LogOut size={20} /> Logout
+          </div>
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="main-content">
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)' }}>Farmer Command Center</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Real-time produce decay & buyer matching system</p>
-          </div>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div className="glass-panel" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Bell size={18} />
-              <span style={{ fontSize: '0.875rem' }}>{notifications.length} Alerts</span>
-            </div>
-            <div className="glass-panel" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Search size={18} />
-              <span style={{ fontSize: '0.875rem' }}>Search...</span>
-            </div>
-          </div>
-        </header>
-
-        <section className="stats-grid">
-          <StatCard label="At Risk Produce" value={stats.atRisk} icon={AlertTriangle} color="var(--status-critical)" />
-          <StatCard label="Total Inventory" value={stats.totalVolume} icon={Package} color="var(--primary)" />
-          <StatCard label="Nearby Buyers" value={stats.activeBuyers} icon={Truck} color="var(--secondary)" />
-        </section>
-
-        <section className="product-stack-container">
-          <div className="product-stack-header">
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem' }}>Priority Pulse Stack</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>Dynamic AI-sorted urgency queue</p>
-            </div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="buyer-action-btn"
-              style={{ width: 'auto', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              <Plus size={18} /> Register Produce
-            </button>
-          </div>
-
-          <div className="product-stack">
-            <AnimatePresence mode="popLayout">
-              {sortedProducts.map(product => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onSelect={setSelectedProduct}
-                  onCancel={handleCancel}
-                  isActive={selectedProduct?.id === product.id}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
-        </section>
-
-        <AddProduceModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onAdd={handleAddProduce}
-        />
-      </main>
-
-      {/* Right Panel: Buyer Match */}
-      <aside className="buyers-panel">
-        <div className="panel-header">
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', marginBottom: '8px' }}>Nearby Matches</h2>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            finding buyers for <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{selectedProduct?.name || 'Produce'}</span>
-          </p>
-        </div>
-
-        <div className="buyer-list">
-          {MOCK_BUYERS.map(buyer => (
-            <BuyerCard key={buyer.id} buyer={buyer} />
-          ))}
-        </div>
-
-        <div style={{ marginTop: '24px', padding: '16px', border: '1px dashed var(--glass-border)', borderRadius: '12px' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '8px' }}>BACKEND INTEGRATION POINT</div>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Matching algorithm uses distance, price, and decay window to optimize route planning.
-          </p>
-        </div>
-      </aside>
+      {/* Main Viewport */}
+      {renderView()}
 
       {/* Notification Toast */}
       <div className="notification-container">
