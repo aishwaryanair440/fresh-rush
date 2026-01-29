@@ -1,31 +1,31 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 
 :root {
   --primary: #10b981;
   --primary-glow: rgba(16, 185, 129, 0.4);
   --secondary: #3b82f6;
   --accent: #8b5cf6;
-  
+
   --bg-dark: #07090e;
   --bg-card: rgba(21, 25, 36, 0.7);
   --bg-card-hover: rgba(30, 41, 59, 0.8);
-  
+
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
-  
+
   --status-fresh: #10b981;
   --status-approaching: #f59e0b;
   --status-critical: #ef4444;
   --status-expired: #7f1d1d;
-  
+
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-  
+
   --font-main: 'Plus Jakarta Sans', sans-serif;
   --font-display: 'Outfit', sans-serif;
-  
+  --font-mono: 'JetBrains Mono', monospace;
+
   --sidebar-width: 260px;
 }
 
@@ -84,15 +84,33 @@ body {
 
 /* Animations */
 @keyframes pulse-critical {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-2px);
+  }
+
+  75% {
+    transform: translateX(2px);
+  }
 }
 
 .animate-pulse-critical {

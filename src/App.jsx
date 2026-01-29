@@ -122,9 +122,11 @@ const BuyerCard = ({ buyer }) => (
 
 function App() {
   const [products, setProducts] = useState(MOCK_PRODUCE);
-  const [selectedProduct, setSelectedProduct] = useState(MOCK_PRODUCE[0]);
+  const [selectedProduct, setSelectedProduct] = useState(MOCK_PRODUCE[0] || null);
   const [notifications, setNotifications] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  if (!products || products.length === 0) return <div style={{ color: 'white', padding: '20px' }}>Initializing Command Center...</div>;
 
   // Priority Sorting Logic
   const sortedProducts = useMemo(() => {
