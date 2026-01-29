@@ -5,16 +5,14 @@ import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
 // Firebase configuration
-// TODO: Replace with your actual Firebase config from Firebase Console
-// Go to: Firebase Console > Project Settings > Your apps > Web app
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyASTdqg4OXabI4XXd2wn30zzJSD7EJctUc",
+  authDomain: "fresh-rush-b7ab2.firebaseapp.com",
+  projectId: "fresh-rush-b7ab2",
+  storageBucket: "fresh-rush-b7ab2.firebasestorage.app",
+  messagingSenderId: "1040345373160",
+  appId: "1:1040345373160:web:c85b5dfc65f9e0d7a7ec5d",
+  measurementId: "G-5DWY2HX2S8"
 };
 
 // Initialize Firebase
