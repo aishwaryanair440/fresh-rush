@@ -11,6 +11,9 @@ import Deliveries from './pages/Deliveries';
 import Analytics from './pages/Analytics';
 import FarmMap from './pages/FarmMap';
 import Settings from './pages/Settings';
+import EditProfile from './pages/settings/EditProfile';
+import ChangePassword from './pages/settings/ChangePassword';
+import Privacy from './pages/settings/Privacy';
 
 import { onAuthChange } from './services/authService';
 import './App.css';
@@ -104,6 +107,9 @@ function App() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="map" element={<FarmMap />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="settings/edit-profile" element={<EditProfile />} />
+          <Route path="settings/change-password" element={<ChangePassword />} />
+          <Route path="settings/privacy" element={<Privacy />} />
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
